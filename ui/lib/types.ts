@@ -112,3 +112,24 @@ export interface BotMessage {
   type: string
   data: unknown
 }
+
+export interface TokenEntry {
+  mint:           string
+  name:           string
+  symbol:         string
+  lifecycleStage: string
+  swapCount:      number
+  lastSeen:       number
+  price?:         number
+  priceInSol?:    number
+  liquidity?:     number
+  marketCap?:     number
+  holderCount?:   number
+  mintRevoked?:   boolean
+  freezeRevoked?: boolean
+  lpBurned?:      boolean
+  imageUrl?:      string | null
+  website?:       string | null
+  twitter?:       string | null
+  telegram?:      string | null
+}

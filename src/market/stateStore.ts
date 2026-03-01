@@ -165,12 +165,10 @@ export function getAllMints(): string[] {
 }
 
 /** Returns live price/liquidity/market state for a token (for HTTP API) */
-export function getTokenState(mint: string): {
-  price: number; priceInSol: number; liquidity: number; marketCap: number
-  holderCount: number; mintRevoked: boolean; freezeRevoked: boolean; lpBurned: boolean
-} | null {
+export function getTokenState(mint: string): Record<string, unknown> | null {
   const s = state.get(mint)
   if (!s) return null
+  const meta = registry.get(mint)
   return {
     price:         s.price,
     priceInSol:    s.priceInSol,
@@ -180,5 +178,10 @@ export function getTokenState(mint: string): {
     mintRevoked:   s.mintRevoked,
     freezeRevoked: s.freezeRevoked,
     lpBurned:      s.lpBurned,
+    // Registry metadata (enriched async)
+    imageUrl:  meta?.imageUrl  ?? null,
+    website:   meta?.website   ?? null,
+    twitter:   meta?.twitter   ?? null,
+    telegram:  meta?.telegram  ?? null,
   }
 }

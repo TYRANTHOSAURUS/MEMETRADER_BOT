@@ -9,8 +9,8 @@ module.exports = {
     extend: {
       colors: {
         g:    '#00ff41',      // matrix green
-        gdim: '#00b32c',      // dimmed green
-        gdark:'#003d10',      // dark green
+        gdim: '#00cc35',      // dimmed green  (secondary text)
+        gdark:'#008a25',      // dark green    (tertiary/inactive)
         c:    '#00d4ff',      // cyan
         cdim: '#007a99',
         o:    '#ff8c00',      // orange/warning

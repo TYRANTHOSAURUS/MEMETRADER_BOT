@@ -2,35 +2,20 @@
 
 import { useState, useEffect } from 'react'
 import PanelBox from '../../components/PanelBox'
-
-interface TokenEntry {
-  mint:           string
-  name:           string
-  symbol:         string
-  lifecycleStage: string
-  swapCount:      number
-  lastSeen:       number
-  price?:         number
-  priceInSol?:    number
-  liquidity?:     number
-  marketCap?:     number
-  mintRevoked?:   boolean
-  freezeRevoked?: boolean
-  lpBurned?:      boolean
-}
+import type { TokenEntry } from '../../lib/types'
 
 const HTTP_URL = 'http://localhost:3001'
 
 type SortKey = 'lastSeen' | 'swapCount' | 'liquidity' | 'marketCap'
 
-function fmtUsd(n: number | undefined): string {
+function fmtUsd(n: number | undefined | null): string {
   if (!n || n === 0) return '—'
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`
   if (n >= 1_000)     return `$${(n / 1_000).toFixed(1)}K`
   return `$${n.toFixed(0)}`
 }
 
-function fmtPrice(n: number | undefined): string {
+function fmtPrice(n: number | undefined | null): string {
   if (!n || n === 0) return '—'
   if (n < 0.000001) return n.toExponential(3)
   return n.toFixed(8)
@@ -47,7 +32,7 @@ export default function Watchlist() {
     try {
       const res  = await fetch(`${HTTP_URL}/api/tokens`)
       const data = await res.json() as TokenEntry[]
-      setTokens(data)
+      setTokens(Array.isArray(data) ? data : [])
     } catch {
       // bot offline
     } finally {
@@ -83,21 +68,13 @@ export default function Watchlist() {
     return 'text-gdim'
   }
 
-  const safetyDots = (t: TokenEntry) => (
-    <div className="flex gap-0.5">
-      <span className={`dot w-1.5 h-1.5 ${t.mintRevoked ? 'dot-green' : 'dot-red'}`} title="Mint revoked" />
-      <span className={`dot w-1.5 h-1.5 ${t.freezeRevoked ? 'dot-green' : 'dot-red'}`} title="Freeze revoked" />
-      <span className={`dot w-1.5 h-1.5 ${t.lpBurned ? 'dot-green' : 'dot-orange'}`} title="LP burned" />
-    </div>
-  )
-
   const STAGES = ['ALL', 'BONDING_CURVE', 'MIGRATING', 'AMM']
+  const COLS = 'grid-cols-[28px_1fr_48px_88px_64px_70px_70px_64px_44px_48px_60px]'
 
   return (
     <div className="space-y-3">
       {/* Filter + sort bar */}
       <div className="panel p-2 flex flex-wrap items-center gap-3 text-[11px]">
-        {/* Search */}
         <div className="flex items-center gap-1.5 flex-1 min-w-32">
           <span className="text-gdim">{'>'}</span>
           <input
@@ -109,7 +86,6 @@ export default function Watchlist() {
           />
         </div>
 
-        {/* Stage filter */}
         <div className="flex gap-1">
           {STAGES.map(s => (
             <button
@@ -126,7 +102,6 @@ export default function Watchlist() {
           ))}
         </div>
 
-        {/* Sort */}
         <div className="flex items-center gap-1.5">
           <span className="text-gdim">SORT</span>
           <select
@@ -147,16 +122,18 @@ export default function Watchlist() {
       <PanelBox title={`TOKEN WATCHLIST (${tokens.length})`}>
         <div className="overflow-auto max-h-[calc(100vh-180px)]">
           {/* Header */}
-          <div className="px-3 py-1.5 grid grid-cols-[140px_60px_100px_70px_70px_80px_80px_50px_1fr] gap-2 text-[10px] text-gdim border-b border-[#00ff4108] sticky top-0 bg-panel">
+          <div className={`px-2 py-1.5 grid ${COLS} gap-2 text-[10px] text-gdim border-b border-[#00ff4108] sticky top-0 bg-panel`}>
+            <span></span>
             <span>TOKEN</span>
             <span>SYM</span>
             <span>STAGE</span>
-            <span>PRICE SOL</span>
-            <span>LIQUIDITY</span>
+            <span>PRICE</span>
+            <span>LIQ</span>
             <span>MCAP</span>
             <span>SWAPS</span>
             <span>SAFE</span>
-            <span>LAST SEEN</span>
+            <span>HLDR</span>
+            <span>AGO</span>
           </div>
 
           {loading && (
@@ -166,25 +143,61 @@ export default function Watchlist() {
           {filtered.map(t => {
             const ago = Math.floor((Date.now() - t.lastSeen) / 1000)
             const agoStr = ago < 60 ? `${ago}s` : ago < 3600 ? `${Math.floor(ago / 60)}m` : `${Math.floor(ago / 3600)}h`
+            const isPlaceholder = t.name.startsWith('TOKEN_')
             return (
               <div
                 key={t.mint}
-                className="t-row px-3 py-1.5 grid grid-cols-[140px_60px_100px_70px_70px_80px_80px_50px_1fr] gap-2 items-center text-[11px]"
+                className={`t-row px-2 py-1.5 grid ${COLS} gap-2 items-center text-[11px]`}
               >
-                <span className="text-g font-bold truncate">{t.name}</span>
-                <span className="text-gdim text-[10px]">{t.symbol}</span>
+                {/* Logo */}
+                <div className="w-5 h-5 rounded-full overflow-hidden bg-[#0a0a0a] border border-[#00ff4115] flex items-center justify-center shrink-0">
+                  {t.imageUrl ? (
+                    <img
+                      src={t.imageUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      onError={e => { e.currentTarget.style.display = 'none' }}
+                    />
+                  ) : (
+                    <span className="text-[8px] text-gdim">{(t.symbol || '?')[0]}</span>
+                  )}
+                </div>
+
+                {/* Name + socials */}
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className={`truncate font-bold text-[11px] ${isPlaceholder ? 'text-gdim' : 'text-g'}`}>
+                    {t.name}
+                  </span>
+                  <div className="flex gap-0.5 shrink-0">
+                    {t.twitter  && <span className="w-1.5 h-1.5 rounded-full bg-c shrink-0" title="Twitter" />}
+                    {t.telegram && <span className="w-1.5 h-1.5 rounded-full bg-o shrink-0" title="Telegram" />}
+                    {t.website  && <span className="w-1.5 h-1.5 rounded-full bg-gdim shrink-0" title="Website" />}
+                  </div>
+                </div>
+
+                <span className="text-gdim text-[10px] truncate">{t.symbol}</span>
                 <span className={`text-[10px] ${stageColor(t.lifecycleStage)}`}>
                   {t.lifecycleStage?.replace('_', ' ')}
                 </span>
                 <span className="text-c font-mono text-[10px]">{fmtPrice(t.priceInSol)}</span>
                 <span className="text-gdim text-[10px]">{fmtUsd(t.liquidity)}</span>
                 <span className="text-gdim text-[10px]">{fmtUsd(t.marketCap)}</span>
-                <span className="text-gdim">{t.swapCount.toLocaleString()}</span>
-                <div>{safetyDots(t)}</div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[#888] text-[10px]">{agoStr}</span>
-                  <span className="text-[#555] text-[10px] truncate">{(t.mint ?? '').slice(0, 16)}…</span>
+                <span className="text-gdim text-[10px]">{t.swapCount.toLocaleString()}</span>
+
+                {/* Safety dots */}
+                <div className="flex gap-0.5">
+                  <span className={`dot w-1.5 h-1.5 ${t.mintRevoked ? 'dot-green' : 'dot-red'}`} title="Mint revoked" />
+                  <span className={`dot w-1.5 h-1.5 ${t.freezeRevoked ? 'dot-green' : 'dot-red'}`} title="Freeze revoked" />
+                  <span className={`dot w-1.5 h-1.5 ${t.lpBurned ? 'dot-green' : 'dot-orange'}`} title="LP burned" />
                 </div>
+
+                {/* Holders */}
+                <span className="text-gdim text-[10px]">
+                  {(t.holderCount ?? 0) > 0 ? (t.holderCount! > 999 ? `${(t.holderCount! / 1000).toFixed(1)}k` : t.holderCount) : '—'}
+                </span>
+
+                {/* Time ago */}
+                <span className="text-[#888] text-[10px]">{agoStr}</span>
               </div>
             )
           })}

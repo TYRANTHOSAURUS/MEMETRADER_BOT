@@ -14,9 +14,15 @@ class TokenRegistry {
       const entry = this.tokens.get(meta.mint)!
       entry.lastSeen = Date.now()
       entry.lifecycleStage = meta.lifecycleStage
+      // Apply enriched fields if provided (enrichment runs after initial registration)
+      if (meta.name && !meta.name.startsWith('TOKEN_')) entry.name = meta.name
+      if (meta.symbol && meta.symbol.length > 1)        entry.symbol = meta.symbol
+      if (meta.imageUrl)  entry.imageUrl  = meta.imageUrl
+      if (meta.website)   entry.website   = meta.website
+      if (meta.twitter)   entry.twitter   = meta.twitter
+      if (meta.telegram)  entry.telegram  = meta.telegram
       return
     }
-
     this.tokens.set(meta.mint, { ...meta, lastSeen: Date.now(), swapCount: 0 })
     bus.emit({ type: 'token:new', data: meta })
   }

@@ -36,6 +36,10 @@ export interface TokenMeta {
   creator: string
   createdAt: number      // unix ms
   lifecycleStage: LifecycleStage
+  imageUrl?: string
+  website?: string
+  twitter?: string
+  telegram?: string
 }
 
 // ─── Candle ──────────────────────────────────────────────────

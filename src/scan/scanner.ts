@@ -424,16 +424,53 @@ function processEnrichQueue(): void {
   })
 }
 
-// Try DexScreener for fast metadata (free, no key needed)
-async function enrichViaDexScreener(mint: string): Promise<{ name: string; symbol: string } | null> {
+interface DexEnrichData {
+  name: string
+  symbol: string
+  imageUrl?: string
+  website?: string
+  twitter?: string
+  telegram?: string
+  liquidity?: number
+  marketCap?: number
+}
+
+async function enrichViaDexScreener(mint: string): Promise<DexEnrichData | null> {
   try {
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`)
     if (!res.ok) return null
-    const data = await res.json() as { pairs?: Array<{ baseToken?: { name?: string; symbol?: string } }> }
-    const pair = data.pairs?.[0]
-    const name   = pair?.baseToken?.name
-    const symbol = pair?.baseToken?.symbol
-    if (name && symbol && !name.startsWith('TOKEN_')) return { name, symbol }
+    const data = await res.json() as {
+      pairs?: Array<{
+        baseToken?: { name?: string; symbol?: string }
+        info?: {
+          imageUrl?: string
+          websites?: Array<{ url: string }>
+          socials?: Array<{ type: string; url: string }>
+        }
+        liquidity?: { usd?: number }
+        fdv?: number
+        marketCap?: number
+      }>
+    }
+    const pairs = data.pairs
+    if (!pairs || pairs.length === 0) return null
+    // Use most liquid pair
+    const pair = pairs.sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0]
+    const name   = pair.baseToken?.name
+    const symbol = pair.baseToken?.symbol
+    if (!name || !symbol) return null
+
+    const socials  = pair.info?.socials ?? []
+    const twitter  = socials.find(s => s.type === 'twitter')?.url
+    const telegram = socials.find(s => s.type === 'telegram')?.url
+    const website  = pair.info?.websites?.[0]?.url
+    const imageUrl = pair.info?.imageUrl
+
+    return {
+      name, symbol, imageUrl, website, twitter, telegram,
+      liquidity:  pair.liquidity?.usd,
+      marketCap:  pair.fdv ?? pair.marketCap,
+    }
   } catch { /* best-effort */ }
   return null
 }
@@ -443,7 +480,7 @@ async function enrichTokenMeta(mint: string): Promise<void> {
     // Fast path: DexScreener (free, no quota impact)
     const dex = await enrichViaDexScreener(mint)
     if (dex) {
-      applyEnrichment(mint, dex.name, dex.symbol)
+      applyEnrichment(mint, dex)
       return
     }
 
@@ -472,28 +509,42 @@ async function enrichTokenMeta(mint: string): Promise<void> {
     if (!res.ok) return
 
     const { result } = await res.json() as { result?: {
-      content?: { metadata?: { name?: string; symbol?: string } }
+      content?: {
+        metadata?: { name?: string; symbol?: string }
+        links?: { image?: string }
+      }
     }}
     if (!result) return
 
     const name   = result.content?.metadata?.name   ?? `TOKEN_${mint.slice(0, 6)}`
     const symbol = result.content?.metadata?.symbol ?? mint.slice(0, 4).toUpperCase()
-    applyEnrichment(mint, name, symbol)
+    const imageUrl = result.content?.links?.image
+    applyEnrichment(mint, { name, symbol, imageUrl })
   } catch { /* enrichment is best-effort */ }
 }
 
-function applyEnrichment(mint: string, name: string, symbol: string): void {
+function applyEnrichment(mint: string, data: DexEnrichData): void {
   const existing = registry.get(mint)
   if (!existing) return
   const meta: TokenMeta = {
-    mint, name, symbol,
+    mint,
+    name:           data.name,
+    symbol:         data.symbol,
     uri:            '',
     creator:        existing.creator,
     createdAt:      existing.createdAt,
     lifecycleStage: existing.lifecycleStage,
+    imageUrl:       data.imageUrl,
+    website:        data.website,
+    twitter:        data.twitter,
+    telegram:       data.telegram,
   }
   registry.register(meta)
-  logger.debug(`Scanner: enriched ${mint.slice(0, 8)} → ${symbol} (${name})`)
+  // Update market data from DexScreener (more accurate than swap-based estimate)
+  if (data.liquidity && data.liquidity > 0) {
+    updateLiquidity(mint, data.liquidity, data.marketCap ?? data.liquidity * 5)
+  }
+  logger.debug(`Scanner: enriched ${mint.slice(0, 8)} → ${data.symbol} (${data.name})`)
 }
 
 function sourceToProgram(source: string): SwapEvent['program'] {

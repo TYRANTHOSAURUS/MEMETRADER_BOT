@@ -107,7 +107,7 @@ function SwapRow({ swap }: { swap: SwapEvent }) {
       <span className="text-c shrink-0 font-mono">{(swap.mint ?? '').slice(0, 8)}…</span>
       <span className="text-gdim shrink-0">{swap.solAmount.toFixed(4)} SOL</span>
       <span className="text-gdim shrink-0">@ {swap.priceInSol.toFixed(8)}</span>
-      <span className="text-[#777] ml-auto shrink-0">{ago}s ago</span>
+      <span className="text-[#999] ml-auto shrink-0">{ago}s ago</span>
     </div>
   )
 }
@@ -204,7 +204,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
         {/* Left: Open Positions */}
         <PanelBox title={`OPEN POSITIONS (${portfolio?.openPositionCount ?? 0})`}>
-          <div className="px-3 py-1.5 flex gap-3 text-[10px] text-gdim border-b border-[#00ff4108]">
+          <div className="px-3 py-1.5 flex gap-3 text-[10px] text-gdim border-b border-[#00ff4120]">
             <span className="w-20">TOKEN</span>
             <span className="w-20">STRATEGY</span>
             <span className="w-20">SIZE</span>
@@ -260,7 +260,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         {/* Live Signals */}
         <PanelBox title={`LIVE SIGNALS (${signals.length})`}>
-          <div className="px-3 py-1.5 flex gap-2 text-[10px] text-gdim border-b border-[#00ff4108]">
+          <div className="px-3 py-1.5 flex gap-2 text-[10px] text-gdim border-b border-[#00ff4120]">
             <span className="w-16">TIME</span>
             <span>DIR</span>
             <span>STRATEGY</span>
@@ -277,7 +277,7 @@ export default function Dashboard() {
 
         {/* Recent Fills */}
         <PanelBox title={`RECENT FILLS (${fills.length})`}>
-          <div className="px-3 py-1.5 flex gap-2 text-[10px] text-gdim border-b border-[#00ff4108]">
+          <div className="px-3 py-1.5 flex gap-2 text-[10px] text-gdim border-b border-[#00ff4120]">
             <span className="w-16">TIME</span>
             <span>SIDE</span>
             <span className="flex-1">TOKEN</span>
@@ -294,7 +294,7 @@ export default function Dashboard() {
 
         {/* Live Swap Feed */}
         <PanelBox title={`SWAP FEED (${swapCount.toLocaleString()} total)`}>
-          <div className="px-3 py-1.5 flex gap-2 text-[10px] text-gdim border-b border-[#00ff4108]">
+          <div className="px-3 py-1.5 flex gap-2 text-[10px] text-gdim border-b border-[#00ff4120]">
             <span>DIR</span>
             <span>TOKEN</span>
             <span>SIZE</span>
@@ -317,7 +317,7 @@ export default function Dashboard() {
         <div className="overflow-auto max-h-36 px-3 py-2 space-y-0.5">
           {logs.slice(0, 10).map(log => (
             <div key={log.id} className={`text-[11px] log-${log.level} leading-relaxed`}>
-              <span className="text-[#666] mr-2">[{fmtTime(log.timestamp, [11, 23])}]</span>
+              <span className="text-[#888] mr-2">[{fmtTime(log.timestamp, [11, 23])}]</span>
               <span className="text-[10px] tracking-wide mr-2">[{log.level}]</span>
               {log.message}
             </div>

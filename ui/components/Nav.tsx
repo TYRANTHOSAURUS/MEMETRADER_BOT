@@ -31,9 +31,9 @@ export default function Nav({ connected, mode, uptime, totalTrades = 0 }: NavPro
   const pathname = usePathname()
 
   return (
-    <nav className="w-44 shrink-0 flex flex-col border-r border-[#00ff4115] bg-[#020202] h-screen sticky top-0">
+    <nav className="w-44 shrink-0 flex flex-col border-r border-[#00ff4130] bg-[#020202] h-screen sticky top-0">
       {/* Header */}
-      <div className="px-3 py-4 border-b border-[#00ff4115]">
+      <div className="px-3 py-4 border-b border-[#00ff4130]">
         <div className="text-g font-bold tracking-widest text-sm">MEMETRADER</div>
         <div className="flex items-center gap-2 mt-1">
           <span className={`text-[10px] font-bold px-1.5 py-0.5 ${
@@ -67,7 +67,7 @@ export default function Nav({ connected, mode, uptime, totalTrades = 0 }: NavPro
       </div>
 
       {/* Status footer */}
-      <div className="px-3 py-3 border-t border-[#00ff4115] space-y-2">
+      <div className="px-3 py-3 border-t border-[#00ff4130] space-y-2">
         <div className="flex items-center gap-2 text-[10px]">
           <span className={`dot ${connected ? 'dot-green' : 'dot-red'}`} />
           <span className={connected ? 'text-g' : 'text-r'}>

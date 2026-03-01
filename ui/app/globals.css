@@ -8,8 +8,8 @@
 
 :root {
   --g:     #00ff41;
-  --gdim:  #00dd38;
-  --gdark: #006620;
+  --gdim:  #00cc35;
+  --gdark: #008a25;
   --c:     #00d4ff;
   --o:     #ff8c00;
   --r:     #ff3333;
@@ -55,17 +55,17 @@ body::before {
 /* Panel box */
 .panel {
   background: #050505;
-  border: 1px solid rgba(0,255,65,0.15);
+  border: 1px solid rgba(0,255,65,0.28);
   border-radius: 2px;
 }
 
 .panel-title {
-  color: var(--gdim);
+  color: var(--g);
   font-size: 10px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   padding: 6px 10px;
-  border-bottom: 1px solid rgba(0,255,65,0.1);
+  border-bottom: 1px solid rgba(0,255,65,0.2);
 }
 
 /* Positive / negative values */
@@ -100,17 +100,17 @@ body::before {
 
 /* Table */
 .t-row {
-  border-bottom: 1px solid rgba(0,255,65,0.07);
+  border-bottom: 1px solid rgba(0,255,65,0.14);
   transition: background 0.1s;
 }
-.t-row:hover { background: rgba(0,255,65,0.04); }
+.t-row:hover { background: rgba(0,255,65,0.08); }
 
 /* Buy/sell badge */
 .badge-buy  { color: var(--g);  border: 1px solid rgba(0,255,65,0.4); padding: 1px 6px; }
 .badge-sell { color: var(--r);  border: 1px solid rgba(255,51,51,0.4); padding: 1px 6px; }
 
 /* Log level colors */
-.log-DEBUG { color: #444; }
+.log-DEBUG { color: #777; }
 .log-INFO  { color: var(--gdim); }
 .log-WARN  { color: var(--o); }
 .log-ERROR { color: var(--r); }
