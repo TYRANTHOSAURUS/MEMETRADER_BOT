@@ -36,10 +36,10 @@ function SignalRow({ sig }: { sig: Signal }) {
       <span className="text-gdim w-16 shrink-0">{time}</span>
       <span className={sig.side === 'BUY' ? 'badge-buy shrink-0' : 'badge-sell shrink-0'}>{sig.side}</span>
       <span className="text-gdim w-20 shrink-0 text-[10px] truncate">
-        {sig.strategyId.replace(/_/g, ' ').slice(0, 12).toUpperCase()}
+        {(sig.strategyId ?? '').replace(/_/g, ' ').slice(0, 12).toUpperCase()}
       </span>
       <span className="text-c flex-1 truncate font-mono text-[10px]">
-        {sig.tokenMint.slice(0, 8)}…
+        {(sig.tokenMint ?? '').slice(0, 8)}…
       </span>
       {/* Confidence bar */}
       <div className="flex items-center gap-1 shrink-0">
@@ -64,7 +64,7 @@ function FillRow({ fill }: { fill: Fill }) {
     <div className="t-row px-3 py-1.5 flex items-center gap-2 text-[11px]">
       <span className="text-gdim w-16 shrink-0">{time}</span>
       <span className={fill.side === 'BUY' ? 'badge-buy shrink-0' : 'badge-sell shrink-0'}>{fill.side}</span>
-      <span className="text-g flex-1 truncate">{fill.tokenName || fill.tokenMint.slice(0, 8)}</span>
+      <span className="text-g flex-1 truncate">{fill.tokenName || (fill.tokenMint ?? '').slice(0, 8)}</span>
       <span className="text-gdim shrink-0">{fill.solAmount.toFixed(4)} SOL</span>
       <span className={`text-[10px] shrink-0 ${fill.paper ? 'text-[#777]' : 'text-o'}`}>
         {fill.paper ? 'PAPER' : 'LIVE'}
@@ -84,7 +84,7 @@ function PositionRow({ pos }: { pos: {
   const ageStr = ageMs < 60000 ? `${Math.floor(ageMs / 1000)}s` : `${Math.floor(ageMs / 60000)}m`
   return (
     <div className="t-row px-3 py-2 flex items-center gap-3 text-[11px]">
-      <span className="text-g w-20 truncate font-bold">{pos.tokenName || pos.tokenMint.slice(0,8)}</span>
+      <span className="text-g w-20 truncate font-bold">{pos.tokenName || (pos.tokenMint ?? '').slice(0,8)}</span>
       <span className="text-gdim text-[10px] w-20 truncate">{pos.strategyId}</span>
       <span className="text-gdim w-20">{pos.solAmount.toFixed(4)} SOL</span>
       <span className="text-gdim w-12 text-[10px]">{ageStr}</span>
@@ -104,7 +104,7 @@ function SwapRow({ swap }: { swap: SwapEvent }) {
       <span className={swap.side === 'buy' ? 'text-g shrink-0' : 'text-r shrink-0'}>
         {swap.side === 'buy' ? '▲' : '▼'}
       </span>
-      <span className="text-c shrink-0 font-mono">{swap.mint.slice(0, 8)}…</span>
+      <span className="text-c shrink-0 font-mono">{(swap.mint ?? '').slice(0, 8)}…</span>
       <span className="text-gdim shrink-0">{swap.solAmount.toFixed(4)} SOL</span>
       <span className="text-gdim shrink-0">@ {swap.priceInSol.toFixed(8)}</span>
       <span className="text-[#777] ml-auto shrink-0">{ago}s ago</span>
@@ -160,7 +160,7 @@ export default function Dashboard() {
 
   const chartData = buildPnlData(mergedFills)
   const winRate   = status?.totalTrades
-    ? (portfolio?.openPositions.reduce((acc, p) => acc + (p.unrealizedPnlSol > 0 ? 1 : 0), 0) ?? 0)
+    ? ((portfolio?.openPositions ?? []).reduce((acc, p) => acc + (p.unrealizedPnlSol > 0 ? 1 : 0), 0))
     : 0
 
   return (
@@ -185,7 +185,7 @@ export default function Dashboard() {
         <Stat
           label="Positions"
           value={`${portfolio?.openPositionCount ?? 0} / ${portfolio?.maxPositions ?? 5}`}
-          sub={`${portfolio?.openPositions.reduce((s, p) => s + p.solAmount, 0).toFixed(4) ?? 0} SOL at risk`}
+          sub={`${(portfolio?.openPositions ?? []).reduce((s, p) => s + p.solAmount, 0).toFixed(4)} SOL at risk`}
         />
         <Stat
           label="Swaps / Signals"
@@ -315,7 +315,7 @@ export default function Dashboard() {
       {/* ── Log stream ── */}
       <PanelBox title="LOG STREAM">
         <div className="overflow-auto max-h-36 px-3 py-2 space-y-0.5">
-          {logs.slice(0, 30).map(log => (
+          {logs.slice(0, 10).map(log => (
             <div key={log.id} className={`text-[11px] log-${log.level} leading-relaxed`}>
               <span className="text-[#666] mr-2">[{fmtTime(log.timestamp, [11, 23])}]</span>
               <span className="text-[10px] tracking-wide mr-2">[{log.level}]</span>

@@ -183,7 +183,7 @@ export default function Portfolio() {
             const age = ageMs < 60000 ? `${Math.floor(ageMs / 1000)}s` : `${Math.floor(ageMs / 60000)}m`
             return (
               <div key={p.id} className="t-row px-3 py-2 flex gap-4 items-center text-[11px]">
-                <span className="text-g w-24 truncate font-bold">{p.tokenName || p.tokenMint.slice(0, 8)}</span>
+                <span className="text-g w-24 truncate font-bold">{p.tokenName || (p.tokenMint ?? '').slice(0, 8)}</span>
                 <span className="text-gdim w-24 truncate text-[10px]">{p.strategyId}</span>
                 <span className="text-gdim w-28 font-mono">{p.entryPriceInSol.toFixed(10)}</span>
                 <span className="text-gdim w-20">{p.solAmount.toFixed(4)} SOL</span>
@@ -219,7 +219,7 @@ export default function Portfolio() {
               <div key={f.id} className="t-row px-3 py-1.5 flex gap-3 items-center text-[11px]">
                 <span className="text-gdim w-20">{fmtTime(f.timestamp)}</span>
                 <span className={f.side === 'BUY' ? 'badge-buy w-14' : 'badge-sell w-14'}>{f.side}</span>
-                <span className="text-g w-24 truncate">{f.tokenName || f.tokenMint.slice(0, 8)}</span>
+                <span className="text-g w-24 truncate">{f.tokenName || (f.tokenMint ?? '').slice(0, 8)}</span>
                 <span className="text-gdim w-24 truncate text-[10px]">{f.strategyId}</span>
                 <span className="text-gdim w-28 font-mono">{f.priceInSol?.toFixed(10) ?? '—'}</span>
                 <span className="text-gdim w-20">{f.solAmount.toFixed(4)}</span>

@@ -145,7 +145,7 @@ export default function Signals() {
                 <span className="text-gdim truncate text-[10px]">
                   {s.strategyId.replace(/_/g, ' ').toUpperCase()}
                 </span>
-                <span className="text-c truncate">{s.tokenName || s.tokenMint.slice(0, 8)}</span>
+                <span className="text-c truncate">{s.tokenName || (s.tokenMint ?? '').slice(0, 8)}</span>
                 <span>
                   <span className={s.side === 'BUY' ? 'badge-buy' : 'badge-sell'}>{s.side}</span>
                 </span>

@@ -33,9 +33,16 @@ export function startWsServer(port: number): void {
     clients.add(client)
     logger.debug(`WS client connected (total: ${clients.size})`)
 
-    // Send recent logs on connect so UI has history
-    const logs = getRecentLogs(100) as import('../core/types.js').LogEntry[]
-    for (const log of [...logs].reverse()) {
+    // Send recent logs on connect so UI has history (normalize snake_case DB rows)
+    const rawLogs = getRecentLogs(100) as Record<string, unknown>[]
+    for (const r of [...rawLogs].reverse()) {
+      const log: import('../core/types.js').LogEntry = {
+        id:        r.id as string,
+        level:     r.level as import('../core/types.js').LogLevel,
+        message:   r.message as string,
+        data:      r.data ? JSON.parse(r.data as string) : undefined,
+        timestamp: r.ts as number,
+      }
       send(client, { type: 'log', data: log })
     }
 

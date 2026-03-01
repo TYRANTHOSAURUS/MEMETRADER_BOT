@@ -44,7 +44,20 @@ export function startHttpServer(port: number): void {
 
   app.get('/api/fills', (req, res) => {
     const strategyId = req.query['strategy'] as string | undefined
-    res.json(getFills(strategyId))
+    const rows = getFills(strategyId) as Record<string, unknown>[]
+    res.json(rows.map(r => ({
+      id:         r.id,
+      strategyId: r.strategy_id,
+      tokenMint:  r.mint,
+      tokenName:  r.token_name ?? r.mint,
+      side:       r.side,
+      price:      r.price,
+      priceInSol: r.price_sol,
+      solAmount:  r.sol_amt,
+      fee:        r.fee,
+      timestamp:  r.ts,
+      paper:      r.paper === 1 || r.paper === true,
+    })))
   })
 
   // ── Strategies ────────────────────────────────────────────
@@ -69,7 +82,14 @@ export function startHttpServer(port: number): void {
 
   app.get('/api/logs', (req, res) => {
     const limit = Number(req.query['limit']) || 200
-    res.json(getRecentLogs(limit))
+    const rows = getRecentLogs(limit) as Record<string, unknown>[]
+    res.json(rows.map(r => ({
+      id:        r.id,
+      level:     r.level,
+      message:   r.message,
+      data:      r.data ? JSON.parse(r.data as string) : undefined,
+      timestamp: r.ts,
+    })))
   })
 
   // ── SOL price oracle ──────────────────────────────────────
