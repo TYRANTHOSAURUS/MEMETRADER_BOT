@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useBotData } from '../../hooks/useBotData'
 import PanelBox from '../../components/PanelBox'
 import type { Fill } from '../../lib/types'
+import { fmtTime } from '../../lib/fmt'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
@@ -19,7 +20,7 @@ function buildPnlSeries(fills: Fill[]) {
     // Rough P&L estimate: we don't have buy price here, so use solAmount as proxy
     cum += f.solAmount * 0.02  // placeholder — real P&L needs buy/sell pairing
     return {
-      t:   new Date(f.timestamp).toISOString().slice(11, 16),
+      t:   fmtTime(f.timestamp, [11, 16]),
       pnl: cum,
     }
   })
@@ -29,7 +30,7 @@ function buildDailyPnl(fills: Fill[]) {
   const buckets = new Map<string, number>()
   for (const f of fills) {
     if (f.side !== 'SELL') continue
-    const day = new Date(f.timestamp).toISOString().slice(0, 10)
+    const day = fmtTime(f.timestamp, [0, 10])
     buckets.set(day, (buckets.get(day) ?? 0) + f.solAmount * 0.02)
   }
   return Array.from(buckets.entries())
@@ -214,11 +215,9 @@ export default function Portfolio() {
             <span className="w-16">FEE</span>
             <span className="ml-auto">MODE</span>
           </div>
-          {fills.slice().reverse().map(f => {
-            const time = new Date(f.timestamp).toISOString().slice(11, 19)
-            return (
+          {fills.slice().reverse().map(f => (
               <div key={f.id} className="t-row px-3 py-1.5 flex gap-3 items-center text-[11px]">
-                <span className="text-gdim w-20">{time}</span>
+                <span className="text-gdim w-20">{fmtTime(f.timestamp)}</span>
                 <span className={f.side === 'BUY' ? 'badge-buy w-14' : 'badge-sell w-14'}>{f.side}</span>
                 <span className="text-g w-24 truncate">{f.tokenName || f.tokenMint.slice(0, 8)}</span>
                 <span className="text-gdim w-24 truncate text-[10px]">{f.strategyId}</span>
@@ -229,8 +228,7 @@ export default function Portfolio() {
                   {f.paper ? 'PAPER' : 'LIVE'}
                 </span>
               </div>
-            )
-          })}
+          ))}
           {fills.length === 0 && (
             <div className="px-3 py-6 text-gdim text-[11px]">no trades yet</div>
           )}

@@ -18,6 +18,8 @@ interface RecentSignal {
   maxLoss:     number | null
 }
 
+import { fmtTime } from '../../lib/fmt'
+
 const HTTP_URL = 'http://localhost:3001'
 
 const STRATEGIES = [
@@ -133,7 +135,7 @@ export default function Signals() {
           )}
 
           {filtered.map(s => {
-            const time = new Date(s.timestamp).toISOString().slice(11, 19)
+            const time = fmtTime(s.timestamp)
             return (
               <div
                 key={s.id}

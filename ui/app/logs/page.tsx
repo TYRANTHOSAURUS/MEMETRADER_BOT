@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useBotData } from '../../hooks/useBotData'
 import type { LogLevel } from '../../lib/types'
+import { fmtTime } from '../../lib/fmt'
 
 const LEVELS: LogLevel[] = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'TRADE']
 
@@ -90,7 +91,7 @@ export default function Logs() {
       <div className="panel flex-1 overflow-auto p-3 font-mono">
         <div className="space-y-0.5">
           {filtered.slice().reverse().map(log => {
-            const time = new Date(log.timestamp).toISOString().slice(11, 23)
+            const time = fmtTime(log.timestamp, [11, 23])
             return (
               <div key={log.id} className={`text-[11px] leading-relaxed ${LEVEL_COLORS[log.level]}`}>
                 <span className="text-[#666] select-none">[{time}]</span>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import PanelBox from '../../components/PanelBox'
+import { fmtTime } from '../../lib/fmt'
 
 interface SignalQualityRow {
   strategyId:    string
@@ -90,7 +91,7 @@ export default function Analytics() {
         <div className="panel p-3">
           <div className="text-gdim text-[10px] tracking-widest uppercase mb-1">LAST UPDATED</div>
           <div className="text-lg font-bold text-gdim">
-            {lastUpdated ? new Date(lastUpdated).toISOString().slice(11, 19) : '—'}
+            {fmtTime(lastUpdated || undefined)}
           </div>
         </div>
       </div>

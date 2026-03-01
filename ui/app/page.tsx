@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useBotData } from '../hooks/useBotData'
 import PanelBox from '../components/PanelBox'
 import type { Signal, Fill, SwapEvent } from '../lib/types'
+import { fmtTime } from '../lib/fmt'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine,
@@ -28,7 +29,7 @@ function Stat({
 
 // ─── Signal row ───────────────────────────────────────────────
 function SignalRow({ sig }: { sig: Signal }) {
-  const time = new Date(sig.timestamp).toISOString().slice(11, 19)
+  const time = fmtTime(sig.timestamp)
   const conf = sig.confidence * 100
   return (
     <div className="t-row px-3 py-1.5 flex items-center gap-2 text-[11px]">
@@ -58,7 +59,7 @@ function SignalRow({ sig }: { sig: Signal }) {
 
 // ─── Fill row ─────────────────────────────────────────────────
 function FillRow({ fill }: { fill: Fill }) {
-  const time = new Date(fill.timestamp).toISOString().slice(11, 19)
+  const time = fmtTime(fill.timestamp)
   return (
     <div className="t-row px-3 py-1.5 flex items-center gap-2 text-[11px]">
       <span className="text-gdim w-16 shrink-0">{time}</span>
@@ -125,7 +126,7 @@ function buildPnlData(fills: Fill[]): PnlPoint[] {
     // Approximate P&L: this is imprecise without buy prices, but gives trend direction
     // Real P&L is in portfolio state; this is just for the chart
     points.push({
-      t:   new Date(f.timestamp).toISOString().slice(11, 16),
+      t:   fmtTime(f.timestamp, [11, 16]),
       pnl: cumulative,
       raw: f.solAmount,
     })
@@ -314,11 +315,9 @@ export default function Dashboard() {
       {/* ── Log stream ── */}
       <PanelBox title="LOG STREAM">
         <div className="overflow-auto max-h-36 px-3 py-2 space-y-0.5">
-          {logs.slice(0, 30).map(log => {
-            const time = new Date(log.timestamp).toISOString().slice(11, 23)
-            return (
+          {logs.slice(0, 30).map(log => (
               <div key={log.id} className={`text-[11px] log-${log.level} leading-relaxed`}>
-                <span className="text-[#666] mr-2">[{time}]</span>
+                <span className="text-[#666] mr-2">[{fmtTime(log.timestamp, [11, 23])}]</span>
                 <span className="text-[10px] tracking-wide mr-2">[{log.level}]</span>
                 {log.message}
               </div>
