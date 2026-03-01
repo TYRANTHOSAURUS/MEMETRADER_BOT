@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# UI
+ui/node_modules/
+ui/.next/
+ui/out/
