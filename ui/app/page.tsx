@@ -316,13 +316,12 @@ export default function Dashboard() {
       <PanelBox title="LOG STREAM">
         <div className="overflow-auto max-h-36 px-3 py-2 space-y-0.5">
           {logs.slice(0, 30).map(log => (
-              <div key={log.id} className={`text-[11px] log-${log.level} leading-relaxed`}>
-                <span className="text-[#666] mr-2">[{fmtTime(log.timestamp, [11, 23])}]</span>
-                <span className="text-[10px] tracking-wide mr-2">[{log.level}]</span>
-                {log.message}
-              </div>
-            )
-          })}
+            <div key={log.id} className={`text-[11px] log-${log.level} leading-relaxed`}>
+              <span className="text-[#666] mr-2">[{fmtTime(log.timestamp, [11, 23])}]</span>
+              <span className="text-[10px] tracking-wide mr-2">[{log.level}]</span>
+              {log.message}
+            </div>
+          ))}
           {logs.length === 0 && (
             <div className="text-gdim text-[11px]">connecting to bot...<span className="cursor" /></div>
           )}
