@@ -182,8 +182,8 @@ export default function Watchlist() {
                 <span className="text-gdim">{t.swapCount.toLocaleString()}</span>
                 <div>{safetyDots(t)}</div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[#333] text-[10px]">{agoStr}</span>
-                  <span className="text-[#222] text-[10px] truncate">{t.mint.slice(0, 16)}…</span>
+                  <span className="text-[#888] text-[10px]">{agoStr}</span>
+                  <span className="text-[#555] text-[10px] truncate">{t.mint.slice(0, 16)}…</span>
                 </div>
               </div>
             )

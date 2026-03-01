@@ -31,14 +31,14 @@ const STRATEGIES = [
 ]
 
 function accBadge(val: boolean | null) {
-  if (val === null) return <span className="text-[#333]">—</span>
+  if (val === null) return <span className="text-[#666]">—</span>
   return val
     ? <span className="text-g text-[10px]">✓</span>
     : <span className="text-r text-[10px]">✗</span>
 }
 
 function gainColor(val: number | null) {
-  if (val === null) return 'text-[#333]'
+  if (val === null) return 'text-[#666]'
   return val >= 0 ? 'text-g' : 'text-r'
 }
 
@@ -100,7 +100,7 @@ export default function Signals() {
                   ? s === 'BUY' ? 'border-g text-g bg-[#00ff4110]'
                     : s === 'SELL' ? 'border-r text-r bg-[#ff333310]'
                     : 'border-gdim text-gdim bg-[#00ff4106]'
-                  : 'border-[#222] text-[#444] hover:border-[#444]'
+                  : 'border-[#444] text-[#888] hover:border-[#666]'
               }`}
             >
               {s}
@@ -150,7 +150,7 @@ export default function Signals() {
                 <span className="text-gdim">{(s.confidence * 100).toFixed(0)}%</span>
                 <span>
                   {s.resolved === null
-                    ? <span className="text-[#333] text-[10px]">…</span>
+                    ? <span className="text-[#666] text-[10px]">…</span>
                     : accBadge(s.accuracy30s)
                   }
                 </span>
@@ -160,7 +160,7 @@ export default function Signals() {
                 <span className={`${gainColor(s.maxLoss)} text-[10px]`}>
                   {s.maxLoss !== null ? `${s.maxLoss.toFixed(1)}%` : '—'}
                 </span>
-                <span className="text-[#444] text-[10px] truncate">{s.reason}</span>
+                <span className="text-gdim text-[10px] truncate">{s.reason}</span>
               </div>
             )
           })}

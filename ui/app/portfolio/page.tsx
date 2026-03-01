@@ -225,7 +225,7 @@ export default function Portfolio() {
                 <span className="text-gdim w-28 font-mono">{f.priceInSol?.toFixed(10) ?? '—'}</span>
                 <span className="text-gdim w-20">{f.solAmount.toFixed(4)}</span>
                 <span className="text-r w-16">{f.fee.toFixed(6)}</span>
-                <span className={`ml-auto text-[10px] ${f.paper ? 'text-[#444]' : 'text-o font-bold'}`}>
+                <span className={`ml-auto text-[10px] ${f.paper ? 'text-[#777]' : 'text-o font-bold'}`}>
                   {f.paper ? 'PAPER' : 'LIVE'}
                 </span>
               </div>

@@ -79,7 +79,7 @@ export default function Nav({ connected, mode, uptime, totalTrades = 0 }: NavPro
         </div>
         {totalTrades > 0 && (
           <div className="text-[10px] text-gdim">
-            {totalTrades} <span className="text-[#444]">trades</span>
+            {totalTrades} <span className="text-[#888]">trades</span>
           </div>
         )}
       </div>

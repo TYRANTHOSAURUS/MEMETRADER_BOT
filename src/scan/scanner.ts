@@ -22,22 +22,34 @@ import { updateSafety, updateLiquidity } from '../market/stateStore.js'
 import type { SwapEvent, TokenMeta } from '../core/types.js'
 
 const PUMPFUN_PROGRAM  = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P'
-const ENHANCED_TX_URL  = 'https://api.helius.xyz/v0/transactions'
-const JUPITER_PRICE_URL = 'https://price.jup.ag/v6/price?ids=So11111111111111111111111111111111111111112'
-const WSOL_MINT         = 'So11111111111111111111111111111111111111112'
+const ENHANCED_TX_URL   = 'https://api.helius.xyz/v0/transactions'
 
-// Live SOL/USD price — refreshed every 60s from Jupiter price API
+// Known non-memecoins to exclude — stables, wrapped majors, SOL
+const IGNORED_MINTS = new Set([
+  'So11111111111111111111111111111111111111112',  // wSOL
+  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
+  'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',  // USDT
+  'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm',  // dogwifhat
+  '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs',  // ETH (Wormhole)
+  'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So',   // mSOL
+  'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',  // jitoSOL
+  'bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1',   // bSOL
+  'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',  // BONK
+  'WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk',    // WEN
+])
+// CoinGecko free tier — no API key needed, ~10 req/min allowed
+const COINGECKO_URL     = 'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd'
+
+// Live SOL/USD price — refreshed every 60s
 let SOL_USD = 155
-let solPriceLastFetch = 0
-
 export function getSolUsdPrice(): number { return SOL_USD }
 
 async function refreshSolPrice(): Promise<void> {
   try {
-    const res = await fetch(JUPITER_PRICE_URL)
+    const res = await fetch(COINGECKO_URL)
     if (!res.ok) return
-    const data = await res.json() as { data?: Record<string, { price: number }> }
-    const price = data.data?.[WSOL_MINT]?.price
+    const data = await res.json() as { solana?: { usd?: number } }
+    const price = data.solana?.usd
     if (price && price > 0) {
       SOL_USD = price
       logger.debug(`Scanner: SOL/USD updated → $${price.toFixed(2)}`)
@@ -58,9 +70,9 @@ const MAX_RPS          = 3
 const MIN_INTERVAL_MS  = Math.ceil(1000 / MAX_RPS)   // 333ms between calls
 
 // Enrichment throttle — getAsset shares the same API key quota.
-// One enrichment per 600ms (≤2/s), capped at 30 queued mints.
-const ENRICH_INTERVAL_MS = 600
-const ENRICH_QUEUE_CAP   = 30
+// One enrichment per 300ms (≤3/s), capped at 50 queued mints.
+const ENRICH_INTERVAL_MS = 300
+const ENRICH_QUEUE_CAP   = 50
 
 let ws: WebSocket | null = null
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
@@ -412,8 +424,31 @@ function processEnrichQueue(): void {
   })
 }
 
+// Try DexScreener for fast metadata (free, no key needed)
+async function enrichViaDexScreener(mint: string): Promise<{ name: string; symbol: string } | null> {
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`)
+    if (!res.ok) return null
+    const data = await res.json() as { pairs?: Array<{ baseToken?: { name?: string; symbol?: string } }> }
+    const pair = data.pairs?.[0]
+    const name   = pair?.baseToken?.name
+    const symbol = pair?.baseToken?.symbol
+    if (name && symbol && !name.startsWith('TOKEN_')) return { name, symbol }
+  } catch { /* best-effort */ }
+  return null
+}
+
 async function enrichTokenMeta(mint: string): Promise<void> {
   try {
+    // Fast path: DexScreener (free, no quota impact)
+    const dex = await enrichViaDexScreener(mint)
+    if (dex) {
+      applyEnrichment(mint, dex.name, dex.symbol)
+      return
+    }
+
+    // Slow path: Helius getAsset (uses API key quota)
+    if (!apiKey) return
     const res = await fetch(
       `https://mainnet.helius-rpc.com/?api-key=${apiKey}`,
       {
@@ -428,11 +463,9 @@ async function enrichTokenMeta(mint: string): Promise<void> {
     )
 
     if (res.status === 429) {
-      // Back off enrichment and re-queue this mint at the front
       enrichQueue.unshift(mint)
-      const delay = 2_000
-      enrichTimer = setTimeout(processEnrichQueue, delay)
-      logger.warn(`Scanner: enrichment rate limited — backing off ${delay}ms`)
+      enrichTimer = setTimeout(processEnrichQueue, 2_000)
+      logger.warn(`Scanner: enrichment rate limited — backing off 2s`)
       return
     }
 
@@ -445,22 +478,22 @@ async function enrichTokenMeta(mint: string): Promise<void> {
 
     const name   = result.content?.metadata?.name   ?? `TOKEN_${mint.slice(0, 6)}`
     const symbol = result.content?.metadata?.symbol ?? mint.slice(0, 4).toUpperCase()
-
-    const existing = registry.get(mint)
-    if (existing) {
-      const meta: TokenMeta = {
-        mint,
-        name,
-        symbol,
-        uri:            '',
-        creator:        existing.creator,
-        createdAt:      existing.createdAt,
-        lifecycleStage: existing.lifecycleStage,
-      }
-      registry.register(meta)
-      logger.debug(`Scanner: enriched ${mint.slice(0, 8)} → ${symbol} (${name})`)
-    }
+    applyEnrichment(mint, name, symbol)
   } catch { /* enrichment is best-effort */ }
+}
+
+function applyEnrichment(mint: string, name: string, symbol: string): void {
+  const existing = registry.get(mint)
+  if (!existing) return
+  const meta: TokenMeta = {
+    mint, name, symbol,
+    uri:            '',
+    creator:        existing.creator,
+    createdAt:      existing.createdAt,
+    lifecycleStage: existing.lifecycleStage,
+  }
+  registry.register(meta)
+  logger.debug(`Scanner: enriched ${mint.slice(0, 8)} → ${symbol} (${name})`)
 }
 
 function sourceToProgram(source: string): SwapEvent['program'] {

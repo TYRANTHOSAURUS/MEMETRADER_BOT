@@ -7,7 +7,7 @@ import type { LogLevel } from '../../lib/types'
 const LEVELS: LogLevel[] = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'TRADE']
 
 const LEVEL_COLORS: Record<LogLevel, string> = {
-  DEBUG: 'text-[#444]',
+  DEBUG: 'text-[#666]',
   INFO:  'text-gdim',
   WARN:  'text-o',
   ERROR: 'text-r',
@@ -35,7 +35,7 @@ export default function Logs() {
   }, [filtered.length, autoScroll, paused])
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] space-y-2">
+    <div className="flex flex-col h-full gap-2">
       {/* Controls */}
       <div className="panel p-2 flex items-center gap-3 shrink-0">
         {/* Level filter */}
@@ -93,13 +93,13 @@ export default function Logs() {
             const time = new Date(log.timestamp).toISOString().slice(11, 23)
             return (
               <div key={log.id} className={`text-[11px] leading-relaxed ${LEVEL_COLORS[log.level]}`}>
-                <span className="text-[#333] select-none">[{time}]</span>
+                <span className="text-[#666] select-none">[{time}]</span>
                 {' '}
                 <span className="text-[10px] tracking-wide">[{log.level.padEnd(5)}]</span>
                 {' '}
                 <span>{log.message}</span>
                 {log.data && (
-                  <span className="text-[#333] ml-2 text-[10px]">
+                  <span className="text-[#555] ml-2 text-[10px]">
                     {JSON.stringify(log.data).slice(0, 120)}
                   </span>
                 )}

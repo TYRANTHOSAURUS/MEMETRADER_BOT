@@ -86,7 +86,7 @@ export default function StatusBar({ status, connected, swapCount = 0 }: StatusBa
 
       <span className="text-[#00ff4115] shrink-0">│</span>
 
-      <span className="text-[#333] shrink-0">v{status?.version ?? '---'}</span>
+      <span className="text-[#666] shrink-0">v{status?.version ?? '---'}</span>
     </div>
   )
 }
